@@ -33,3 +33,14 @@ exports.jwtPassport=passport.use(new jwtStrategy(opts, (payload, done)=>{
 }));
 
 exports.verifyUser=passport.authenticate("jwt", {session: false});
+
+exports.verifyAdmin=(req, res, next)=>{
+
+    if(req.user.admin==false){
+        err=new Error("You are not an admin");
+        err.status=403;
+        next(err);
+    }
+
+    else next();
+};
