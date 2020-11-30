@@ -5,6 +5,7 @@ var jwtStrategy=require("passport-jwt").Strategy;
 var jwt=require("jsonwebtoken");
 var extractJwt=require("passport-jwt").ExtractJwt;
 var config=require("./config");
+var FacebookTokenStrategy=require("passport-facebook-token");
 
 //module.exports=
 passport.use(new LocalStrategy(User.authenticate()));
@@ -44,3 +45,32 @@ exports.verifyAdmin=(req, res, next)=>{
 
     else next();
 };
+
+exports.facebookPassport=passport.use(new FacebookTokenStrategy({
+    clientID: config.facebook.clientID,
+    clientSecret: config.facebook.clientSecret
+},
+(accessToken, verifyToken, profile, done)=>{
+
+    User.findOne({facebookID: profile.id}, (err, user)=>{
+
+        if(err) return done(err, false);
+        else if(user!==null) return done(null, user);
+        else{
+
+            user=new User({
+                username: profile.displayName,
+                facebookID: profile.id,
+                firstname: profile.name.givenName,
+                lastname: profile.name.familyName
+            });
+
+            user.save((err, user)=>{
+
+                if(err) return done(err, false);
+                return done(null, user);
+            });
+        }
+    });
+}
+));
